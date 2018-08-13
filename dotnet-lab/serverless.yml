@@ -1,0 +1,178 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: aws-serverless-may-26-lab # NOTE: update this with your service name
+
+plugins:
+  - serverless-pseudo-parameters
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: dotnetcore2.0
+  stage: dev
+  region: us-east-1
+
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+# you can add statements to the Lambda function's IAM Role here
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "ses:SendEmail"
+      Resource:
+        - "*"
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:s3:::"
+            - Ref: NotesBucket
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:s3:::"
+            - Ref: NotesBucket
+            - "/*"
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:#{AWS::AccountId}:table/${self:service}-table-${self:provider.stage}"
+
+# you can define service wide environment variables here
+  environment:
+    FromMail: azambrano30@gmail.com
+    ToMail: alanzam@msn.com
+    ArchiveBucketName: ${self:service}-bucket-${self:provider.stage}
+    TableName: ${self:service}-table-${self:provider.stage}
+
+# you can add packaging information here
+package:
+  artifact: bin/release/netcoreapp2.0/deploy-package.zip
+#  exclude:
+#    - exclude-me.js
+#    - exclude-me-dir/**
+
+functions:
+  AddNote:
+    handler: CsharpHandlers::TodoApp.ApiFunctions.NoteFunctions::AddNote
+    events:
+      - http:
+          path: /
+          method: post
+
+  GetNotes:
+    handler: CsharpHandlers::TodoApp.ApiFunctions.NoteFunctions::GetNotes
+    events:
+      - http:
+          path: /
+          method: get
+
+  DeleteNote:
+    handler: CsharpHandlers::TodoApp.ApiFunctions.NoteFunctions::DeleteNote
+    events:
+      - http:
+          path: /
+          method: delete
+
+  EditNote:
+    handler: CsharpHandlers::TodoApp.ApiFunctions.NoteFunctions::EditNote
+    events:
+      - http:
+          path: /
+          method: put
+
+  # NotifyNoteChange:
+  #   handler: CsharpHandlers::TodoApp.DatabaseFunctions.NoteDatabaseFunctions::NotifyNoteChange
+  #   events:
+  #     - stream:
+  #         arn: arn:aws:dynamodb:us-east-1:017816566410:table/aws-serverless-may-26-lab-table-dev/stream/2018-05-26T14:43:19.323
+
+  CleanDatabase:
+    handler: CsharpHandlers::TodoApp.DatabaseFunctions.NoteDatabaseFunctions::MoveToS3
+    events:
+      - schedule: rate(10 minutes)      
+
+#    The following are a few example events you can configure
+#    NOTE: Please make sure to change your handler code to work with those events
+#    Check the event documentation for details
+#    events:
+#      - http:
+#          path: users/create
+#          method: get
+#      - s3: ${env:BUCKET}
+#      - schedule: rate(10 minutes)
+#      - sns: greeter-topic
+#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
+#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
+#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
+#      - iot:
+#          sql: "SELECT * FROM 'some_topic'"
+#      - cloudwatchEvent:
+#          event:
+#            source:
+#              - "aws.ec2"
+#            detail-type:
+#              - "EC2 Instance State-change Notification"
+#            detail:
+#              state:
+#                - pending
+#      - cloudwatchLog: '/aws/lambda/hello'
+#      - cognitoUserPool:
+#          pool: MyUserPool
+#          trigger: PreSignUp
+
+#    Define function environment variables here
+#    environment:
+#      variable2: value2
+
+# you can add CloudFormation resource templates here
+resources:
+  Resources:
+
+    NotesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-table-${self:provider.stage}
+        AttributeDefinitions:
+          - AttributeName: Id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: Id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+		  
+    NotesBucket:			
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-bucket-${self:provider.stage}
+
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
