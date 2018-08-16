@@ -1,30 +1,48 @@
 # Serverless Framework Cheat Sheet
 AWS Reference:
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/index.html
+https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/welcome.html
+
+Resources: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+
+IAM: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html
+
+
+Serverless Framework Reference:
+Events: https://serverless.com/framework/docs/providers/aws/events/
+Resources: https://serverless.com/framework/docs/providers/aws/guide/resources/
+Variables: https://serverless.com/framework/docs/providers/aws/guide/variables/
+IAM: https://serverless.com/framework/docs/providers/aws/guide/iam/
+
 
 		
-Serverless Reference:
-    LogicalName:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: my-new-table
-        AttributeDefinitions:
-          - AttributeName: data
-            AttributeType: S
-        KeySchema:
-          - AttributeName: data
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-		StreamSpecification:
-          StreamViewType: NEW_IMAGE
-		  
-	LogicalName:			
-		Type: AWS::S3::Bucket
-		Properties:
-			BucketName: my-new-bucket
+Serverless Sample:
+	service:
+		name: myService
 
+	frameworkVersion: ">=1.0.0 <2.0.0"
+
+	provider:
+		name: aws
+		runtime: nodejs6.10
+		stage: dev # Set the default stage used. Default is dev
+		region: us-east-1 # Overwrite the default region used. Default is us-east-1
+		environment: # Service wide environment variables
+			serviceEnvVar: 123456789
+		iamRoleStatements: # IAM role statements so that services can be accessed in the AWS account
+			- Effect: 'Allow'
+			Action:
+				- 's3:ListBucket'
+			Resource:
+				Fn::Join:
+				- ''
+				- - 'arn:aws:s3:::'
+				- Ref: ServerlessDeploymentBucket
+
+		tags: # Optional service wide function tags
+			foo: bar
+			baz: qux
 
 	Events:
 		events: # The Events that trigger this Function
@@ -80,3 +98,25 @@ Serverless Reference:
 		  - cloudwatchLog:
 			  logGroup: '/aws/lambda/hello'
 			  filter: '{$.userIdentity.type = Root}'
+			  
+	Resources:
+	    LogicalName:
+		Type: AWS::DynamoDB::Table
+		Properties:
+			TableName: my-new-table
+			AttributeDefinitions:
+				- AttributeName: data
+				AttributeType: S
+			KeySchema:
+				- AttributeName: data
+				KeyType: HASH
+			ProvisionedThroughput:
+				ReadCapacityUnits: 1
+				WriteCapacityUnits: 1
+			StreamSpecification:
+				StreamViewType: NEW_IMAGE
+		  
+		LogicalName:			
+			Type: AWS::S3::Bucket
+			Properties:
+				BucketName: my-new-bucket
