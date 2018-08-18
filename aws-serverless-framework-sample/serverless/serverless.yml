@@ -1,15 +1,28 @@
-service: serverless-exchange-alan-zambrano # NOTE: update this with your service name
+service: serverless-exchange-alan-zambrano-1 # NOTE: update this with your service name
+
 
 provider:
   name: aws
   runtime: nodejs6.10
   stage: dev
   environment:
-      BUY_ORDERS: ${self.service}-buyorders-${self.provider.stage}
-      SELL_ORDERS: ${self.service}-sellorders-${self.provider.stage}
-      TRANSACTION: ${self.service}-transactions-${self.provider.stage}
+      BUY_ORDERS: {Ref: buyOrdersTable}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-buyorders-${self:provider.stage}"
 
 functions:
+  PostBuy:
+    handler: api/postbuy.handler
+    events:
+      - http:
+          path: orders/buy
+          method: post
+          cors: true
+
   ComparadorBuy:
     handler: comparadorbuy.handler
     events:
@@ -25,7 +38,7 @@ resources:
       buyOrdersTable:
         Type: AWS::DynamoDB::Table
         Properties:
-          TableName: ${self.service}-buyorders-${self.provider.stage}
+          TableName: ${self:service}-buyorders-${self:provider.stage}
           AttributeDefinitions:
             - AttributeName: exchange
               AttributeType: S
