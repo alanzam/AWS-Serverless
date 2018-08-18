@@ -5,8 +5,9 @@ module.exports.handler = (event, context, callback) => {
   console.log(event);
    var docClient = new AWS.DynamoDB.DocumentClient();
    var table = process.env.BUY_ORDERS;
-   var exchange = event.body.itemA + ":" + event.body.itemB;
-   var price = event.body.price;
+   var body = JSON.parse(event.body);
+   var exchange = body.itemA + ":" + body.itemB;
+   var price = body.price;
    var params = {
        TableName: table,
        Item: {
