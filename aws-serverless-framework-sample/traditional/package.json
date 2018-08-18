@@ -1,0 +1,21 @@
+{
+  "name": "exchange",
+  "version": "1.0.0",
+  "description": "Test exchange using MySql, express, disk memory",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "express-fileupload": "^0.4.0",
+    "express-jwt": "^5.3.1",
+    "jsonwebtoken": "^8.3.0",
+    "sequelize": "^4.38.0",
+    "sqlite3": "^4.0.2",
+    "uuid": "^3.3.2"
+  }
+}
