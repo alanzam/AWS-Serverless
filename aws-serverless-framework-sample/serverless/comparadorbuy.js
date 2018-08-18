@@ -4,19 +4,19 @@ var AWS = require('aws-sdk');
 
 exports.handler = (event, context, callback) => {
     console.log("EventType: " + event.Records[0].eventName);
-    console.log("Object: " + event.Records[0].dynamodb);
+    console.log("Object: " + JSON.stringify(event.Records[0].dynamodb));
     var obj = event.Records[0].dynamodb;
     var docClient = new AWS.DynamoDB.DocumentClient()
     var table = process.env.SELL_ORDERS;
-    var exchange = obj.Keys.exchange.S;
-    var price = obj.Keys.price.S;
+    var exchange = obj.NewImage.exchange.S;
+    var price = obj.NewImage.price.N;
     var params = {
         TableName: table,
         Key:{
           "exchange": exchange,
-          "price" : price
+          "price" : parseInt(price)
         },
-        UpdateExpression: "set status = :s",
+        UpdateExpression: "set orderstate = :s",
         ExpressionAttributeValues:{
             ":s":"RESOLVED"
         },

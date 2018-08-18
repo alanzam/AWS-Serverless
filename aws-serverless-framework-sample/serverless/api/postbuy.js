@@ -13,7 +13,7 @@ module.exports.handler = (event, context, callback) => {
        Item: {
            "exchange": exchange,
            "price" : price,
-           "statue" : "PENDING"
+           "orderstate" : "PENDING"
        }
    };
    console.log("Adding " + JSON.stringify(params) + " to " + table);
