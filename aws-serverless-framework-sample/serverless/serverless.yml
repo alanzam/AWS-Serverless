@@ -1,65 +1,81 @@
-
-
-service: serverless-exchange-alan-zambrano
-
-plugins:
-  - serverless-pseudo-parameters
+service: serverless-exchange-alan-zambrano # NOTE: update this with your service name
 
 provider:
   name: aws
   runtime: nodejs6.10
-
+  stage: dev
   environment:
-    BucketName: ${self:service}-bucket-${self:provider.stage}
-    BuyOrdersTable: ${self:service}-buyorders-${self:provider.stage}
-    SellOrdersTable: ${self:service}-sellorders-${self:provider.stage}
-    TransactionTable: ${self:service}-transactions-${self:provider.stage}
+      BUY_ORDERS: ${self.service}-buyorders-${self.provider.stage}
+      SELL_ORDERS: ${self.service}-sellorders-${self.provider.stage}
+      TRANSACTION: ${self.service}-transactions-${self.provider.stage}
 
 functions:
-  hello:
-    handler: handler.hello
+  ComparadorBuy:
+    handler: comparadorbuy.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - buyOrdersTable
+              - StreamArn
 
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
-#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
-
-# you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+resources:
+  Resources:
+      buyOrdersTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+          TableName: ${self.service}-buyorders-${self.provider.stage}
+          AttributeDefinitions:
+            - AttributeName: exchange
+              AttributeType: S
+            - AttributeName: price
+              AttributeType: N
+          KeySchema:
+            - AttributeName: exchange
+              KeyType: HASH
+            - AttributeName: price
+              KeyType: RANGE
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+          StreamSpecification:
+            StreamViewType: NEW_AND_OLD_IMAGES
+      # sellOrdersTable:
+      #   Type: AWS::DynamoDB::Table
+      #   Properties:
+      #     TableName: ${self.service}-sellorders-${self.provider.stage}
+      #     AttributeDefinitions:
+      #       - AttributeName: exchange
+      #         AttributeType: S
+      #       - AttributeName: price
+      #         AttributeType: I
+      #     KeySchema:
+      #       - AttributeName: price
+      #         KeyType: HASH
+      #       - AttributeName: price
+      #         KeyType: RANGE
+      #     ProvisionedThroughput:
+      #       ReadCapacityUnits: 1
+      #       WriteCapacityUnits: 1
+      #     StreamSpecification:
+      #       StreamViewType: NEW_AND_OLD_IMAGES
+      # transactionTable:
+      #   Type: AWS::DynamoDB::Table
+      #   Properties:
+      #     TableName: ${self.service}-transactions-${self.provider.stage}
+      #     AttributeDefinitions:
+      #       - AttributeName: exchange
+      #         AttributeType: S
+      #       - AttributeName: price
+      #         AttributeType: I
+      #     KeySchema:
+      #       - AttributeName: price
+      #         KeyType: HASH
+      #       - AttributeName: price
+      #         KeyType: RANGE
+      #     ProvisionedThroughput:
+      #       ReadCapacityUnits: 1
+      #       WriteCapacityUnits: 1
+      #     StreamSpecification:
+      #       StreamViewType: NEW_AND_OLD_IMAGES
