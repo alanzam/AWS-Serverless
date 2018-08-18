@@ -12,7 +12,8 @@ module.exports.handler = (event, context, callback) => {
        TableName: table,
        Item: {
            "exchange": exchange,
-           "price" : price
+           "price" : price,
+           "statue" : "PENDING"
        }
    };
    console.log("Adding " + JSON.stringify(params) + " to " + table);

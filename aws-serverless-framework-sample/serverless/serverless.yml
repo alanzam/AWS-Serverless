@@ -1,18 +1,29 @@
 service: serverless-exchange-alan-zambrano-1 # NOTE: update this with your service name
 
-
 provider:
   name: aws
   runtime: nodejs6.10
   stage: dev
   environment:
       BUY_ORDERS: {Ref: buyOrdersTable}
+      SELL_ORDERS: {Ref: sellOrdersTable}
+      TRANSACTIONS: {Ref: transactionTable}
   iamRoleStatements:
     - Effect: "Allow"
       Action:
         - "dynamodb:*"
       Resource:
         - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-buyorders-${self:provider.stage}"
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-sellorders-${self:provider.stage}"
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:service}-transactions-${self:provider.stage}"
 
 functions:
   PostBuy:
@@ -54,41 +65,41 @@ resources:
             WriteCapacityUnits: 1
           StreamSpecification:
             StreamViewType: NEW_AND_OLD_IMAGES
-      # sellOrdersTable:
-      #   Type: AWS::DynamoDB::Table
-      #   Properties:
-      #     TableName: ${self.service}-sellorders-${self.provider.stage}
-      #     AttributeDefinitions:
-      #       - AttributeName: exchange
-      #         AttributeType: S
-      #       - AttributeName: price
-      #         AttributeType: I
-      #     KeySchema:
-      #       - AttributeName: price
-      #         KeyType: HASH
-      #       - AttributeName: price
-      #         KeyType: RANGE
-      #     ProvisionedThroughput:
-      #       ReadCapacityUnits: 1
-      #       WriteCapacityUnits: 1
-      #     StreamSpecification:
-      #       StreamViewType: NEW_AND_OLD_IMAGES
-      # transactionTable:
-      #   Type: AWS::DynamoDB::Table
-      #   Properties:
-      #     TableName: ${self.service}-transactions-${self.provider.stage}
-      #     AttributeDefinitions:
-      #       - AttributeName: exchange
-      #         AttributeType: S
-      #       - AttributeName: price
-      #         AttributeType: I
-      #     KeySchema:
-      #       - AttributeName: price
-      #         KeyType: HASH
-      #       - AttributeName: price
-      #         KeyType: RANGE
-      #     ProvisionedThroughput:
-      #       ReadCapacityUnits: 1
-      #       WriteCapacityUnits: 1
-      #     StreamSpecification:
-      #       StreamViewType: NEW_AND_OLD_IMAGES
+      sellOrdersTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+          TableName: ${self:service}-sellorders-${self:provider.stage}
+          AttributeDefinitions:
+            - AttributeName: exchange
+              AttributeType: S
+            - AttributeName: price
+              AttributeType: N
+          KeySchema:
+            - AttributeName: exchange
+              KeyType: HASH
+            - AttributeName: price
+              KeyType: RANGE
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+          StreamSpecification:
+            StreamViewType: NEW_AND_OLD_IMAGES
+      transactionTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+          TableName: ${self:service}-transactions-${self:provider.stage}
+          AttributeDefinitions:
+            - AttributeName: exchange
+              AttributeType: S
+            - AttributeName: price
+              AttributeType: N
+          KeySchema:
+            - AttributeName: exchange
+              KeyType: HASH
+            - AttributeName: price
+              KeyType: RANGE
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+          StreamSpecification:
+            StreamViewType: NEW_AND_OLD_IMAGES
